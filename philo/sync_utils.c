@@ -20,7 +20,8 @@ void	set_stop(t_table *table, int value)
 void print_state(t_philo *philo, char *msg)
 {
 	pthread_mutex_lock(&philo->table->print_mutex);
-	printf("%lld %d %s\n", get_time_in_ms() - philo->table->start_time, philo->id, msg); 
+	if (get_stop(philo->table) == 0)
+		printf("%lld %d %s\n", get_time_in_ms() - philo->table->start_time, philo->id, msg); 
 	pthread_mutex_unlock(&philo->table->print_mutex);
 }
 
@@ -29,14 +30,23 @@ void cleanup(t_table *table)
 	int i; 
 
 	i = 0; 
-	while (i < table->nb_philos)
+	while (i < table->forks_init_count)
 	{
 		pthread_mutex_destroy(&table->forks[i]);
+		i++; 
+	}
+	i = 0; 
+	while (i < table->meal_mutex_init_count)
+	{
 		pthread_mutex_destroy(&table->philos[i].meal_mutex);
 		i++;
 	}
-	pthread_mutex_destroy(&table->stop_mutex); 
-	pthread_mutex_destroy(&table->print_mutex);
-	free(table->forks);
-	free(table->philos); 
+	if (table->stop_mutex_init)
+		pthread_mutex_destroy(&table->stop_mutex); 
+	if (table->print_mutex_init)
+		pthread_mutex_destroy(&table->print_mutex);
+	if (table->forks)
+		free(table->forks);
+	if (table->philos)
+		free(table->philos); 
 }

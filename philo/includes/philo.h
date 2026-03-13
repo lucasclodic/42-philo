@@ -24,42 +24,40 @@ typedef struct s_philo t_philo;
 
 struct s_table
 {
-	// ==== argv ====
 	int nb_philos;
 	int time_to_die;
 	int time_to_eat;
 	int time_to_sleep;
-	int must_eat; // le nombre de fois que chaque philo doit manger (facultatif)
-
-	// ==== infos ====
-	long long start_time; // long long car gettimeofday() donne un très grand nombre
-	int stop; // 0 tant que la simulation continue et 1 dès qu'un philosphe meurt, lu par les philo et modifié par le monitor
-
-	pthread_mutex_t stop_mutex; // mutex stop car il est lu par les philo et modifié par le monitor donc pour ne pas lire et modifier en même temps (data races) on place un mutex
-	pthread_mutex_t print_mutex; // éviter que deux threads écrivent en même temps dans le terminal
-	pthread_mutex_t *forks; // tableau de mutex de fourchettes
-
-	t_philo *philos; // tableau de tous les philos
+	int must_eat; 
+	long long start_time;
+	int stop;
+	pthread_mutex_t stop_mutex;
+	pthread_mutex_t print_mutex;
+	pthread_mutex_t *forks;
+	t_philo *philos;
+	int forks_init_count;
+	int meal_mutex_init_count;
+	int threads_created_count;
+	int stop_mutex_init;
+	int print_mutex_init;
 };
 
 struct s_philo
 {
 	int id; 
-	pthread_t thread; // identifiant du thread du philo, sert à créer suivre et attendre ce thread
-	t_table *table; // pointeur vers la table partagée
-
-	pthread_mutex_t *left_fork; // pour un philo[i] ce sera la fork[i]
-	pthread_mutex_t *right_fork; // pour un philo[i] ce sera la fork[(i + 1) % N]
-	pthread_mutex_t meal_mutex; // mutex de verrou pour last_meal et meals_eaten car monitor le lit et philo le modifie après chaque repas
-
-	long long last_meal; // c'est propre à un philo mais le thread du philo les écrit et le thread monitor le lit
-	int meals_eaten; // pareil ici donc il faut protéger avec soit un mutex par philo ou un mutex global d'état (?)
-
+	pthread_t thread;
+	t_table *table;
+	pthread_mutex_t *left_fork;
+	pthread_mutex_t *right_fork;
+	pthread_mutex_t meal_mutex;
+	long long last_meal;
+	int meals_eaten;
 };
 
 // init.c
-int init_table(t_table *table);
-int init_philos(t_table *table);
+int			init_table(t_table *table);
+int			init_philos(t_table *table);
+int			parsing_argv(char **argv, t_table *table);
 
 // utils.c
 int			ft_atoi(char *str);
@@ -71,11 +69,14 @@ int			get_stop(t_table *table);
 void		set_stop(t_table *table, int value);
 void		print_state(t_philo *philo, char *msg);
 void		cleanup(t_table *table);
+int			cleanup_table_only(t_table *table);
 
 // routine.c
 void    precise_sleep(long long duration_ms, t_table *table);
 void	*routine(void *arg);
 int		start_simulation(t_table *table); 
+
+// monitor.c
 int		monitor_simulation(t_table *table);
 
 #endif

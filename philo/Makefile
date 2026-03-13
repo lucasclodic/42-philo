@@ -10,7 +10,7 @@
 #                                                                              #
 # **************************************************************************** #
 
-SRCS =	philo.c utils.c sync_utils.c init.c
+SRCS =	philo.c utils.c sync_utils.c init.c routine.c monitor.c
 
 OBJS = 	$(SRCS:.c=.o)
 
