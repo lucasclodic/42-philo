@@ -23,7 +23,7 @@ NAME = philo
 all : $(NAME)
 
 $(NAME): $(OBJS)
-	cc $(OBJS) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
 %.o: %.c includes/philo.h
 	$(CC) $(CFLAGS) -c $< -o $@

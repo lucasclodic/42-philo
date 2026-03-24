@@ -69,7 +69,6 @@ int			get_stop(t_table *table);
 void		set_stop(t_table *table, int value);
 void		print_state(t_philo *philo, char *msg);
 void		cleanup(t_table *table);
-int			cleanup_table_only(t_table *table);
 
 // routine.c
 void    precise_sleep(long long duration_ms, t_table *table);
