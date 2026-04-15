@@ -1,10 +1,22 @@
-#include "includes/philo.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   init.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lclodic <lclodic@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/02/25 15:42:18 by lclodic           #+#    #+#             */
+/*   Updated: 2026/04/02 12:00:00 by lclodic          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+# include "includes/philo.h"
 
 int	parsing_argv(char **argv, t_table *table)
 {
-	int i; 
+	int	i;
 
-	i = 1; 
+	i = 1;
 	while (argv[i])
 	{
 		if (is_valid_number(argv[i]) == 1 || ft_atoi(argv[i]) < 1)
@@ -22,13 +34,12 @@ int	parsing_argv(char **argv, t_table *table)
 	return (0);
 }
 
-int init_table(t_table *table)
+int	init_table(t_table *table)
 {
-	int i; 
+	int	i;
 
-	table->start_time = get_time_in_ms();
 	if (pthread_mutex_init(&table->stop_mutex, NULL) != 0)
-		return (1); 
+		return (1);
 	table->stop_mutex_init = 1;
 	if (pthread_mutex_init(&table->print_mutex, NULL) != 0)
 		return (1);
@@ -44,28 +55,65 @@ int init_table(t_table *table)
 		table->forks_init_count++;
 		i++;
 	}
-	table->philos = malloc(sizeof(t_philo) * table->nb_philos); 
+	table->philos = malloc(sizeof(t_philo) * table->nb_philos);
 	if (!table->philos)
-		return (1); 
+		return (1);
 	return (0);
 }
 
-int init_philos(t_table *table)
+int	init_philos(t_table *table)
 {
-	int i; 
+	int	i;
 
-	i = 0; 
+	i = 0;
 	while (i < table->nb_philos)
 	{
 		table->philos[i].id = i + 1;
 		table->philos[i].table = table;
 		table->philos[i].left_fork = &table->forks[i];
-		table->philos[i].right_fork = &table->forks[(i + 1) % table->nb_philos];
+		table->philos[i].right_fork
+			= &table->forks[(i + 1) % table->nb_philos];
 		if (pthread_mutex_init(&table->philos[i].meal_mutex, NULL) != 0)
 			return (1);
 		table->meal_mutex_init_count++;
-		table->philos[i].last_meal = table->start_time;
 		table->philos[i].meals_eaten = 0;
+		i++;
+	}
+	return (0);
+}
+
+static int	join_and_stop(t_table *table)
+{
+	int	i;
+
+	set_stop(table, 1);
+	i = 0;
+	while (i < table->threads_created_count)
+	{
+		pthread_join(table->philos[i].thread, NULL);
+		i++;
+	}
+	return (1);
+}
+
+int	start_simulation(t_table *table)
+{
+	int	i;
+
+	table->start_time = get_time_in_ms();
+	i = 0;
+	while (i < table->nb_philos)
+	{
+		table->philos[i].last_meal = table->start_time;
+		i++;
+	}
+	i = 0;
+	while (i < table->nb_philos)
+	{
+		if (pthread_create(&table->philos[i].thread, NULL,
+				routine, &table->philos[i]) != 0)
+			return (join_and_stop(table));
+		table->threads_created_count++;
 		i++;
 	}
 	return (0);
